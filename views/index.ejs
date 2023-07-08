@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <link rel="stylesheet" type="text/css" href="stylesheets/style.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="socket.io/socket.io.js"></script>
+        <script>
+            $(document).ready(function() {
+                const socket = io();
+                socket.on('connect', function() {
+                    getName(function(name) {
+                        socket.emit('new_user', name);
+                    });
+                });
+                
+                function getName(callback) {
+                    let name = prompt('Enter your name:');
+                    if (name) {
+                        callback(name);
+                    } else {
+                        getName(callback);
+                    }
+                }
+
+                $('#send_message').click(function(event) {
+                    let message = $('input[name=message]').val();
+                    socket.emit('new_message', message);
+                    return false;
+                }); 
+
+                socket.on('update_users', function(users) {
+                    const userList = $('#users');
+                    userList.empty();
+                    users.forEach(function(user) {
+                        const li = $('<li></li>').text(user.name);
+                        userList.append(li);
+                    });
+                });
+
+                socket.on('update_messages', function(messages) {
+                    const messageList = $('#messages');
+                    messageList.empty();
+                    messages.forEach(function(mess) {
+                        const li = $('<li></li>').text(mess.name + ': ' + mess.message);
+                        messageList.append(li);
+                    });
+                });
+
+                socket.on('update_word', function(word) {
+                    let result = word[0];
+                    for (let i = 1; i < word.length - 1; i++) {
+                    result += " " + "_";
+                    }
+                    result += " " + word[word.length-1];
+                    let guessWord = $('.word');
+                    guessWord.empty();
+                    guessWord.append(`<p>${result}<p>`);
+                    console.log(result); 
+                });
+
+                socket.on('update_winner', function(messages) {
+                    const messageList = $('#messages');
+                    messageList.empty();
+                    messages.forEach(function(mess) {
+                        const li = $('<li></li>').text(mess.name + ': ' + mess.message);
+                        messageList.append(li);
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Word chat game</h1>
+        <main>
+            <div class="word"></div>
+            <div class="wrapper">
+                <div class="online">
+                    <h3>Online Users:</h3>
+                    <ul id="users"></ul>
+                </div>
+                <div class="messages">
+                    <h3>Chat Messages:</h3>
+                    <ul id="messages"></ul>
+                </div>
+            </div>
+            <form id="chat_form">
+                <input type="text" id='message_bar' name="message">
+                <button id="send_message">Send message</button>
+            </form>
+        </main>
+    </body>
+</html>
